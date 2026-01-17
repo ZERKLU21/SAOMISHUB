@@ -1,0 +1,10 @@
+{
+  "name": "SAOMI HUB",
+  "short_name": "CiteMaster",
+  "description": "Herramienta escolar que genera citas APA 7 de forma manual o automática extrayendo información de enlaces mediante IA.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "requestFramePermissions": []
+}
