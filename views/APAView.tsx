@@ -39,7 +39,10 @@ const APAView: React.FC<APAViewProps> = ({ setCurrentView, citations, setCitatio
       };
       setCitations([newCitationItem, ...citations]);
       setSearchQuery('');
-    } catch (e) { alert("Error al extraer datos."); }
+    } catch (e: any) { 
+      // Opción 1: Mostrar error real para diagnóstico
+      alert(`ERROR DE EXTRACCIÓN:\n${e.message}`); 
+    }
     finally { setIsExtracting(false); }
   };
 
