@@ -1,7 +1,7 @@
 {
   "name": "SAOMI HUB",
-  "short_name": "CiteMaster",
-  "description": "Herramienta escolar que genera citas APA 7 de forma manual o automática extrayendo información de enlaces mediante IA.",
+  "short_name": "StudyHub",
+  "description": "Herramienta escolar para gestión de apuntes, tareas, biblioteca de recursos y control de gastos.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

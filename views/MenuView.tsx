@@ -16,8 +16,6 @@ const MenuView: React.FC<MenuViewProps> = ({ setCurrentView, userConfig, themeAc
         {userConfig.greeting || 'Hola,'} {userConfig.nickname} ✨
       </h3>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <MenuCard title="APA 7" desc="Citar" icon="📖" color={`bg-${themeAccentColor}`} radius={borderRadiusClass} onClick={() => setCurrentView('APA_GENERATOR')} />
-        <MenuCard title="Detector IA" desc="Analizar" icon="🤖" color="bg-rose-500" radius={borderRadiusClass} onClick={() => setCurrentView('AI_DETECTOR')} />
         <MenuCard title="Notas" desc="Apuntes" icon="📝" color="bg-purple-400" radius={borderRadiusClass} onClick={() => setCurrentView('NOTES')} />
         <MenuCard title="Tareas" desc="Pendientes" icon="📋" color="bg-indigo-400" radius={borderRadiusClass} onClick={() => setCurrentView('TASKS')} />
         <MenuCard title="Biblioteca" desc="Recursos" icon="📚" color="bg-orange-400" radius={borderRadiusClass} onClick={() => setCurrentView('LIBRARY')} />

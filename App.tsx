@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import Header from './components/Header';
 import SplashScreen from './components/SplashScreen';
 import MenuView from './views/MenuView';
-import APAView from './views/APAView';
 import NotesView from './views/NotesView';
 import TasksView from './views/TasksView';
 import LibraryView from './views/LibraryView';
@@ -13,12 +12,11 @@ import PipelineView from './views/PipelineView';
 import ExpenseView from './views/ExpenseView';
 import SettingsView from './views/SettingsView';
 import SecretView from './views/SecretView';
-import AIDetectorView from './views/AIDetectorView';
 import MichiCompanion from './components/MichiCompanion';
 import { supabase } from './services/supabaseClient';
 import { 
-  Citation, Note, MoodboardItem, PipelineProject, LibraryItem, LibraryFolder, UserConfig,
-  Task, Achievement, ViewState, Expense, CitationProject, MichiStats
+  Note, MoodboardItem, PipelineProject, LibraryItem, LibraryFolder, UserConfig,
+  Task, Achievement, ViewState, Expense, MichiStats
 } from './types';
 
 const CAT_PATTERN_URL = "https://img.freepik.com/free-vector/cute-cats-pattern-background-doodle-style_53876-100663.jpg?w=1380";
@@ -46,8 +44,6 @@ const App: React.FC = () => {
     michi: DEFAULT_MICHI
   });
 
-  const [citations, setCitations] = useState<Citation[]>([]);
-  const [citationProjects, setCitationProjects] = useState<CitationProject[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [moodboard, setMoodboard] = useState<MoodboardItem[]>([]);
@@ -67,8 +63,6 @@ const App: React.FC = () => {
         const val = localStorage.getItem(key);
         if (val) setter(JSON.parse(val));
       };
-      load('saomihub_citations', setCitations);
-      load('saomihub_citation_projects', setCitationProjects);
       load('saomihub_notes', setNotes);
       load('saomihub_tasks', (t: Task[]) => {
         setTasks(t);
@@ -86,13 +80,18 @@ const App: React.FC = () => {
     const loadFromSupabase = async () => {
       setSyncStatus('loading');
       try {
-        // Ejemplo: Cargar citas de Supabase
-        const { data: cloudCitations, error } = await supabase.from('citations').select('*').order('timestamp', { ascending: false });
-        if (!error && cloudCitations && cloudCitations.length > 0) {
-          setCitations(cloudCitations);
+        // Cargar moodboard
+        const { data: cloudMoodboard, error: moodError } = await supabase.from('moodboard').select('*').order('timestamp', { ascending: false });
+        if (!moodError && cloudMoodboard && cloudMoodboard.length > 0) {
+          setMoodboard(cloudMoodboard.map((m: any) => ({
+            id: m.id,
+            title: m.title,
+            imageUrl: m.image_url,
+            link: m.link,
+            palette: m.palette,
+            timestamp: m.timestamp
+          })));
         }
-        
-        // Se podrían cargar el resto de las tablas aquí...
         
         setSyncStatus('synced');
       } catch (err) {
@@ -104,7 +103,6 @@ const App: React.FC = () => {
     loadFromLocalStorage();
     loadFromSupabase();
 
-    // Iniciar transición de salida
     const exitTimer = setTimeout(() => {
       setIsExitingSplash(true);
       setTimeout(() => setShowSplash(false), 800);
@@ -113,15 +111,13 @@ const App: React.FC = () => {
     return () => clearTimeout(exitTimer);
   }, []);
 
-  // Guardar en LocalStorage y Sincronizar con Supabase (Debounced/Auto-save)
+  // Guardar en LocalStorage y Sincronizar con Supabase
   useEffect(() => {
     if (isInitialLoad.current) {
       isInitialLoad.current = false;
       return;
     }
 
-    localStorage.setItem('saomihub_citations', JSON.stringify(citations));
-    localStorage.setItem('saomihub_citation_projects', JSON.stringify(citationProjects));
     localStorage.setItem('saomihub_notes', JSON.stringify(notes));
     localStorage.setItem('saomihub_tasks', JSON.stringify(tasks));
     localStorage.setItem('saomihub_moodboard', JSON.stringify(moodboard));
@@ -132,22 +128,17 @@ const App: React.FC = () => {
     localStorage.setItem('saomihub_user_config', JSON.stringify(userConfig));
     localStorage.setItem('saomihub_expenses', JSON.stringify(expenses));
 
-    // Sincronización selectiva con Supabase para datos críticos (Citas/Links)
     const syncWithSupabase = async () => {
       try {
-        // Upsert de citas (esto asume que la tabla 'citations' tiene RLS configurado o es pública para este anon key)
-        if (citations.length > 0) {
-          await supabase.from('citations').upsert(citations.map(c => ({
-            id: c.id,
-            original_url: c.originalUrl,
-            apa_string: c.apaString,
-            title: c.title,
-            author: c.author,
-            year: c.year,
-            source: c.source,
-            type: c.type,
-            timestamp: c.timestamp,
-            grounding_sources: c.groundingSources
+        // Upsert de Moodboard
+        if (moodboard.length > 0) {
+          await supabase.from('moodboard').upsert(moodboard.map(m => ({
+            id: m.id,
+            title: m.title,
+            image_url: m.imageUrl,
+            link: m.link,
+            palette: m.palette,
+            timestamp: m.timestamp
           })));
         }
       } catch (e) {
@@ -157,9 +148,8 @@ const App: React.FC = () => {
 
     const timer = setTimeout(syncWithSupabase, 2000);
     return () => clearTimeout(timer);
-  }, [citations, citationProjects, notes, tasks, moodboard, pipelines, library, folders, achievements, userConfig, expenses]);
+  }, [notes, tasks, moodboard, pipelines, library, folders, achievements, userConfig, expenses]);
 
-  // Detectar tareas completadas para dar pescaditos
   useEffect(() => {
     const newlyCompleted = tasks.filter(t => t.completed && !prevTasksRef.current.find(pt => pt.id === t.id)?.completed);
     if (newlyCompleted.length > 0) {
@@ -176,7 +166,6 @@ const App: React.FC = () => {
     prevTasksRef.current = tasks;
   }, [tasks]);
 
-  // Reducir energía y felicidad con el tiempo
   useEffect(() => {
     const interval = setInterval(() => {
       setUserConfig(prev => ({
@@ -212,82 +201,25 @@ const App: React.FC = () => {
 
     switch (currentView) {
       case 'MENU':
-        return <MenuView 
-          setCurrentView={setCurrentView} 
-          userConfig={userConfig} 
-          themeAccentColor={themeAccentColor} 
-          borderRadiusClass={borderRadiusClass} 
-        />;
-      case 'APA_GENERATOR':
-        return <APAView 
-          setCurrentView={setCurrentView} 
-          citations={citations} 
-          setCitations={setCitations} 
-          citationProjects={citationProjects} 
-          setCitationProjects={setCitationProjects} 
-        />;
-      case 'AI_DETECTOR':
-        return <AIDetectorView setCurrentView={setCurrentView} />;
+        return <MenuView setCurrentView={setCurrentView} userConfig={userConfig} themeAccentColor={themeAccentColor} borderRadiusClass={borderRadiusClass} />;
       case 'NOTES':
-        return <NotesView 
-          setCurrentView={setCurrentView} 
-          notes={notes} 
-          setNotes={setNotes} 
-          library={library}
-          setLibrary={setLibrary}
-          folders={folders}
-        />;
+        return <NotesView setCurrentView={setCurrentView} notes={notes} setNotes={setNotes} library={library} setLibrary={setLibrary} folders={folders} />;
       case 'TASKS':
-        return <TasksView 
-          setCurrentView={setCurrentView} 
-          tasks={tasks} 
-          setTasks={setTasks} 
-          folders={folders}
-        />;
+        return <TasksView setCurrentView={setCurrentView} tasks={tasks} setTasks={setTasks} folders={folders} />;
       case 'LIBRARY':
-        return <LibraryView 
-          setCurrentView={setCurrentView} 
-          library={library} 
-          setLibrary={setLibrary} 
-          folders={folders} 
-          setFolders={setFolders} 
-        />;
+        return <LibraryView setCurrentView={setCurrentView} library={library} setLibrary={setLibrary} folders={folders} setFolders={setFolders} />;
       case 'PORTFOLIO':
-        return <PortfolioView 
-          setCurrentView={setCurrentView} 
-          achievements={achievements} 
-          setAchievements={setAchievements} 
-        />;
+        return <PortfolioView setCurrentView={setCurrentView} achievements={achievements} setAchievements={setAchievements} />;
       case 'MOODBOARD':
-        return <MoodboardView 
-          setCurrentView={setCurrentView} 
-          moodboard={moodboard} 
-          setMoodboard={setMoodboard} 
-        />;
+        return <MoodboardView setCurrentView={setCurrentView} moodboard={moodboard} setMoodboard={setMoodboard} />;
       case 'PIPELINE':
-        return <PipelineView 
-          setCurrentView={setCurrentView} 
-          pipelines={pipelines} 
-          setPipelines={setPipelines} 
-        />;
+        return <PipelineView setCurrentView={setCurrentView} pipelines={pipelines} setPipelines={setPipelines} />;
       case 'EXPENSE_CONTROL':
-        return <ExpenseView 
-          setCurrentView={setCurrentView} 
-          expenses={expenses} 
-          setExpenses={setExpenses} 
-          privacyMode={userConfig.privacyMode}
-        />;
+        return <ExpenseView setCurrentView={setCurrentView} expenses={expenses} setExpenses={setExpenses} privacyMode={userConfig.privacyMode} />;
       case 'SETTINGS':
-        return <SettingsView 
-          setCurrentView={setCurrentView} 
-          userConfig={userConfig} 
-          setUserConfig={setUserConfig} 
-        />;
+        return <SettingsView setCurrentView={setCurrentView} userConfig={userConfig} setUserConfig={setUserConfig} />;
       case 'SECRET':
-        return <SecretView 
-          setCurrentView={setCurrentView} 
-          fontClass={fontClassMap[userConfig.fontStyle]} 
-        />;
+        return <SecretView setCurrentView={setCurrentView} fontClass={fontClassMap[userConfig.fontStyle]} />;
       default:
         return <MenuView setCurrentView={setCurrentView} userConfig={userConfig} themeAccentColor={themeAccentColor} borderRadiusClass={borderRadiusClass} />;
     }
@@ -325,7 +257,6 @@ const App: React.FC = () => {
         {renderView()}
       </main>
 
-      {/* Compañero Michi-Estudiante */}
       {!showSplash && currentView !== 'SECRET' && (
         <MichiCompanion 
           tasks={tasks} 

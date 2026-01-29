@@ -1,16 +1,6 @@
 
-export type SourceType = 'web' | 'libro' | 'articulo' | 'blog' | 'pdf';
-export type ViewState = 'MENU' | 'APA_GENERATOR' | 'NOTES' | 'MOODBOARD' | 'PIPELINE' | 'LIBRARY' | 'TASKS' | 'PORTFOLIO' | 'SECRET' | 'SETTINGS' | 'EXPENSE_CONTROL' | 'AI_DETECTOR';
-
-export interface CitationFormData {
-  author: string;
-  date: string;
-  title: string;
-  siteName: string;
-  url: string;
-  type: SourceType;
-  groundingSources?: Array<{ title: string; url: string }>;
-}
+// ViewState updated to include new views for citations and AI detection
+export type ViewState = 'MENU' | 'NOTES' | 'MOODBOARD' | 'PIPELINE' | 'LIBRARY' | 'TASKS' | 'PORTFOLIO' | 'SECRET' | 'SETTINGS' | 'EXPENSE_CONTROL' | 'APA' | 'AI_DETECTOR';
 
 export interface MichiStats {
   name: string;
@@ -38,26 +28,6 @@ export interface UserConfig {
   useGradients: boolean;
   privacyMode: boolean;
   michi: MichiStats;
-}
-
-export interface CitationProject {
-  id: string;
-  name: string;
-  timestamp: number;
-}
-
-export interface Citation {
-  id: string;
-  projectId?: string;
-  originalUrl: string;
-  apaString: string;
-  title: string;
-  author: string;
-  year: string;
-  source: string;
-  type: SourceType;
-  timestamp: number;
-  groundingSources?: Array<{ title: string; url: string }>;
 }
 
 export interface Note {
@@ -188,4 +158,37 @@ export interface ScheduleEntry {
   task: string;
   color: string;
   timestamp: number;
+}
+
+/* Added types for Citation and Research features to fix import errors */
+export type SourceType = 'web' | 'libro' | 'articulo' | 'blog' | 'pdf';
+
+export interface Citation {
+  id: string;
+  projectId?: string;
+  originalUrl: string;
+  apaString: string;
+  title: string;
+  author: string;
+  year: string;
+  source: string;
+  type: SourceType;
+  timestamp: number;
+  groundingSources?: Array<{ title: string; url: string }>;
+}
+
+export interface CitationProject {
+  id: string;
+  name: string;
+  timestamp: number;
+}
+
+export interface CitationFormData {
+  author: string;
+  date: string;
+  title: string;
+  siteName: string;
+  type: SourceType;
+  url: string;
+  groundingSources?: Array<{ title: string; url: string }>;
 }
