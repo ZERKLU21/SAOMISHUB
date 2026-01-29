@@ -1,0 +1,10 @@
+{
+  "name": "SAOMI HUB",
+  "short_name": "StudyHub",
+  "description": "Herramienta escolar para gestión de apuntes, tareas, biblioteca de recursos y control de gastos.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "requestFramePermissions": []
+}
